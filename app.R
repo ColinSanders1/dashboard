@@ -2,7 +2,6 @@ library(shiny)
 library(dplyr)
 library(DT)
 
-# Example pitcher data
 pitcher_data <- data.frame(
   Player = c("Chase Burns", "Thatcher Hurd", "Taisei Ota", "Brody Brecht"),
   Position = c("RHP", "RHP", "RHP", "RHP"),
@@ -20,7 +19,6 @@ pitcher_data <- data.frame(
   )
 )
 
-# Example position player data
 position_player_data <- data.frame(
   Player = c("Jac Caglianone", "Munetaka Murakami", "Tommy White", "Charlie Condon", 
              "Dakota Jordan", "Kaelen Culpepper", "Hye-seong Kim", "Jacob Cozart", "Cam Leary"),
@@ -44,7 +42,6 @@ position_player_data <- data.frame(
   )
 )
 
-# Define UI
 ui <- fluidPage(
   titlePanel("Scouting Reports Dashboard"),
   
@@ -67,34 +64,32 @@ ui <- fluidPage(
 )
 
 server <- function(input, output) {
-  # Helper function to generate scouting report links
   generate_link <- function(report) {
     if (is.na(report) || report == "") {
-      return("")  # Leave blank if no report
+      return("")  
     }
     if (grepl("^http", report)) {
       paste0('<a href="', report, '" target="_blank">View Report</a>')
     } else {
-      # Remove 'www/' for serving static files
+  
       paste0('<a href="', gsub("^www/", "", report), '" target="_blank">View PDF</a>')
     }
   }
-  
-  # Add Rounded OFP and generate links for pitchers
+
   pitcher_data <- pitcher_data %>%
     mutate(
       Rounded_OFP = round(OFP / 5) * 5,
       ScoutingReport = sapply(ScoutingReport, generate_link)
     )
   
-  # Add Rounded OFP and generate links for position players
+
   position_player_data <- position_player_data %>%
     mutate(
       Rounded_OFP = round(OFP / 5) * 5,
       ScoutingReport = sapply(ScoutingReport, generate_link)
     )
   
-  # Reactive filtered data for pitchers
+
   filtered_pitchers <- reactive({
     data <- pitcher_data
     if (input$position_filter_pitchers != "All") {
@@ -103,7 +98,7 @@ server <- function(input, output) {
     data
   })
   
-  # Reactive filtered data for position players
+
   filtered_position_players <- reactive({
     data <- position_player_data
     if (input$position_filter_position_players != "All") {
@@ -112,7 +107,7 @@ server <- function(input, output) {
     data
   })
   
-  # Render table for pitchers
+
   output$pitcher_table <- renderDT({
     datatable(filtered_pitchers() %>% select(-OFP) %>% rename(OFP = Rounded_OFP),
               escape = FALSE, options = list(pageLength = 5)) %>%
@@ -121,8 +116,7 @@ server <- function(input, output) {
         backgroundColor = styleInterval(c(45, 55), c('orange', 'yellow', 'green'))
       )
   })
-  
-  # Render table for position players
+
   output$position_player_table <- renderDT({
     datatable(filtered_position_players() %>% select(-OFP) %>% rename(OFP = Rounded_OFP),
               escape = FALSE, options = list(pageLength = 5)) %>%
@@ -133,6 +127,5 @@ server <- function(input, output) {
   })
 }
 
-# Run the application 
 shinyApp(ui = ui, server = server)
 
